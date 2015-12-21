@@ -3,11 +3,9 @@
 # Copyright (c) 2011, 2012 @radiospiel
 # Distributed under the terms of the modified BSD license, see LICENSE.BSD
 
-module Sinatra::SSE
-end
-
 require_relative "sse/version"
 require_relative "sse/marshal"
+require 'timers'
 
 # Support for SSE streams.
 #
@@ -21,7 +19,7 @@ require_relative "sse/marshal"
 #
 module Sinatra::SSE
   extend Marshal
-  
+
   # The keepalive period.
   KEEP_ALIVE = 28
 
@@ -42,40 +40,41 @@ module Sinatra::SSE
 
       reset_keepalive_timer
     end
-    
+
     def close
       @out.close
     end
-    
+
     # set a callback block for errors
     def errback(&block)
       @errback = Proc.new
     end
-    
+
     # set a callback block.
     def callback(&block)
       @callback = Proc.new
     end
-    
+
     # Push an event to the client.
     def push(hash)
       raise ArgumentError unless hash.is_a?(Hash)
-      
+
       @out << Sinatra::SSE.marshal(hash)
       reset_keepalive_timer
     end
-    
+
     private
-    
+
     def cancel_keepalive_timer #:nodoc:
       @timer.cancel if @timer
     end
 
     def reset_keepalive_timer #:nodoc:
       cancel_keepalive_timer
-      @timer = EventMachine::PeriodicTimer.new(KEEP_ALIVE) { send_keepalive_traffic }
+      timers = Timers::Group.new
+      @timer = timers.every(KEEP_ALIVE) { send_keepalive_traffic }
     end
-    
+
     def send_keepalive_traffic #:nodoc:
       @out << " \n"
     end
