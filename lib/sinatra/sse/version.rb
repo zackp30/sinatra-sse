@@ -3,6 +3,9 @@
 # Copyright (c) 2011, 2012 @radiospiel
 # Distributed under the terms of the modified BSD license, see LICENSE.BSD
 
+module Sinatra
+end
+
 module Sinatra::SSE
   # The Sinatra::SSE version number
   VERSION = "0.1"
